@@ -37,38 +37,22 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB. Reuse the connection if it already exists (Vercel may
-// import this module more than once). The connection is started eagerly so it
-// is ready by the time the first request arrives, both locally and on Vercel.
-let connecting = null;
-function connectDB() {
-  if (mongoose.connection.readyState === 1) return Promise.resolve();
-  if (!connecting) {
-    connecting = mongoose
-      .connect(process.env.MONGO_URI)
-      .then(() => console.log('MongoDB connected'))
-      .catch((err) => {
-        connecting = null; // allow retry on next request
-        console.log('DB connection failed:', err.message);
-        throw err;
-      });
-  }
-  return connecting;
-}
-
-if (process.env.MONGO_URI) {
-  connectDB();
-}
-
-// When run directly (npm start / npm run dev), start listening on a port
 if (require.main === module) {
+  // Stop early with a clear message if the settings are missing
   if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
     console.log('Please create server/.env with MONGO_URI and JWT_SECRET (see .env.example)');
     process.exit(1);
   }
-  connectDB().then(() => {
-    app.listen(PORT, () => console.log('Server running on port ' + PORT));
-  });
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log('MongoDB connected');
+      app.listen(PORT, () => console.log('Server running on port ' + PORT));
+    })
+    .catch((err) => {
+      console.log('DB connection failed:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
