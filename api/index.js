@@ -8,7 +8,11 @@ function connect() {
   if (mongoose.connection.readyState === 1) return Promise.resolve();
   if (!connecting) {
     connecting = mongoose
-      .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 8000 })
+      .connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 15000,
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 15000,
+      })
       .catch((err) => {
         connecting = null; // try again on the next request
         throw err;
